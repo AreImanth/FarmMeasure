@@ -1,0 +1,36 @@
+{
+  "name": "farmmeasure",
+  "version": "1.0.0",
+  "description": "A web-based tool for measuring agricultural field boundaries and calculating land area. Built with vanilla JavaScript and Leaflet. Runs entirely in your browser — no server, no account; map tiles are fetched from OpenStreetMap/MapTiler.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/inject-key.js",
+    "key:local": "node scripts/key-local.js",
+    "lint": "eslint js/ scripts/inject-key.js scripts/key-local.js",
+    "serve": "python -m http.server 8765",
+    "serve:test": "python -m http.server 8766",
+    "test:unit": "npm run lint && node scripts/test-math.js && node scripts/test-i18n.js",
+    "test:ci": "npm run lint && node scripts/test-math.js && node scripts/test-i18n.js",
+    "test": "node scripts/smoke.js && node scripts/smoke-pdf.js && node scripts/smoke-storage.js && node scripts/test-math.js && node scripts/test-i18n.js",
+    "test:smoke": "node scripts/smoke.js",
+    "test:math": "node scripts/test-math.js",
+    "test:i18n": "node scripts/test-i18n.js",
+    "test:pdf": "node scripts/smoke-pdf.js",
+    "test:storage": "node scripts/smoke-storage.js",
+    "test:location": "node scripts/smoke-location.js",
+    "test:tiles": "node scripts/smoke-map-tiles.js",
+    "test:mobile": "node scripts/smoke-mobile.js",
+    "test:disclaimer": "node scripts/smoke-disclaimer.js",
+    "test:pdf-render": "node scripts/smoke-pdf-render.js",
+    "test:theme-toggle": "node scripts/smoke-theme-toggle.js",
+    "test:theme-css": "node scripts/smoke-theme-css.js",
+    "test:theme-syspref": "node scripts/smoke-theme-syspref.js",
+    "test:theme-mobile": "node scripts/smoke-theme-mobile.js"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "globals": "^17.12.0",
+    "puppeteer-core": "^25.10.0"
+  }
+}

@@ -1,0 +1,23 @@
+# FarmMeasure CI — audited lateral tests. No production touch.
+# Runs on every push + pull request. Browser-free checks only, so it needs
+# no server, no secrets, no MapTiler key. Headless-Edge smoke tests stay
+# local (see TESTING.md) because they need :8765 + Edge binary.
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm run test:math
+      - run: npm run test:i18n

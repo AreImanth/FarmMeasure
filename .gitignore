@@ -1,0 +1,60 @@
+# ── Secrets & Environment ──
+.env
+.env.*
+!.env.example
+js/secrets.js
+secrets.js
+**/secrets.js
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+
+# ── Python (if ever added) ──
+__pycache__/
+*.pyc
+*.pyo
+.cache/
+venv/
+.venv/
+env/
+
+# ── Node / Build ──
+node_modules/
+dist/
+build/
+.nyc_output/
+.eslintcache
+*.tsbuildinfo
+
+# ── Test artifacts ──
+test-downloads/
+test-results/
+test-logs/
+playwright-report/
+playwright-traces/
+smoke-*.png
+mobile_view.jpeg
+
+# ── OS / IDE ──
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+~$*
+
+# ── Logs & temp ──
+*.log
+*.tmp
+*.bak
+*.orig
+*.rej
+*.patch
+*.diff
+
+# ── Vendor update tooling ──
+vendor-update/

@@ -1,0 +1,24 @@
+# amplify.yml — FarmMeasure AWS Amplify hosting.
+# Production = `main` branch. Every other branch / PR gets an ISOLATED
+# preview URL automatically (the test environment) with its own origin,
+# so localStorage / service-worker caches never touch production data.
+# Static site. MapTiler key is injected at build time from the
+# per-environment MAPTILER_KEY variable (Amplify Console > Hosting >
+# Environment variables). Same script as Cloudflare Pages uses.
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        # Fail fast if the per-environment key is missing (never ship placeholder tiles)
+        - npm run build
+  artifacts:
+    baseDirectory: /
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
