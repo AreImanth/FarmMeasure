@@ -136,13 +136,8 @@ farmmeasure/
 - English is the default and the fallback for any missing string — the UI
   can never render a raw translation key.
 - Hindi (हिन्दी) is fully wired: UI, dialogs, toasts, PDFs, and unit
-  descriptions. Hindi strings are drafts pending native-speaker proofread;
-  corrections land in `lang/hi.json` in one pass.
-- Telugu and Tamil dictionaries ship after the same proofread flow — sample
-  PDFs live in `proof_read/` for reviewers (see `proof_read/README.md`).
-- Adding a language later = one file in `lang/` + one entry in
-  `js/i18n.js`. Unit symbols, numerals, and user-typed field names are
-  never translated.
+  descriptions.
+- Other languages will be adding soon (Telugu, Tamil, Marathi, Malayalam). 
 
 ## Privacy
 
