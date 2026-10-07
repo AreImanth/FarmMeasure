@@ -79,8 +79,7 @@ npm run lint         # ESLint over js/
 npm test             # full chain incl. headless-Edge smoke tests (needs :8765)
 ```
 
-Isolated test lanes (never production): `npm run serve:test` (:8766),
-Amplify branch previews, `your-farmmeasure-staging` bucket.
+Isolated test lanes: `npm run serve:test` (:8766).
 See [TESTING.md](./TESTING.md) for tiers + audit trail.
 See [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md) before every release.
 
@@ -110,12 +109,11 @@ farmmeasure/
 │   ├── bottom-sheet.js     # Mobile bottom-sheet panel
 │   ├── mobile-menu.js      # Mobile tools menu
 │   ├── reporter.js         # Report contact-details prompt (memory-only)
-│   ├── secrets.js          # LOCAL ONLY MapTiler key (gitignored, never deploy)
+│   ├── secrets.js          # LOCAL ONLY MapTiler key (gitignored)
 │   ├── secrets.example.js  # Template for secrets.js
 │   └── utils.js            # Small helpers
-├── lang/                   # Translation dictionaries (en.json, hi.json)
+├── lang/                   # Translation dictionaries
 ├── fonts/                  # Noto Sans Devanagari TTFs for Hindi PDFs (OFL)
-├── proof_read/             # Sample PDFs per language for native-speaker review
 ├── scripts/                # Headless smoke tests + Node test suites
 ├── vendor/                 # All JS/CSS libs (no CDN, no SRI needed)
 ├── assets/                 # Static assets
@@ -128,7 +126,6 @@ farmmeasure/
 ├── RELEASE_CHECKLIST.md    # Pre-release steps
 ├── README.md
 ├── LICENSE                 # MIT
-└── DEPLOYMENT.md           # AWS hosting guide
 ```
 
 ## Languages
@@ -150,6 +147,11 @@ farmmeasure/
 - Report contact details you type are embedded only in that file — never stored.
 - Language choice is stored on your device only.
 - No analytics, no tracking, no telemetry.
+
+## Development of the Application:
+
+- The application is under development, more features and integrations will be added soon.
+
 
 ## License
 
