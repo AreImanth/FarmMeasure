@@ -1,0 +1,19 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'
+
+- script: npm ci
+  displayName: Install dependencies
+
+- script: npm run test:unit
+  displayName: Run tests
+
+- script: npm run lint
+  displayName: Lint code
