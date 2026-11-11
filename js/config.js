@@ -50,6 +50,15 @@
         maxNativeZoom: 19,
         subdomains: '', // MapTiler hybrid jpg tiles don't use subdomains
       }),
+      esri: Object.freeze({
+        name: 'Esri World Imagery',
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attribution:
+          'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+        maxZoom: 22,
+        maxNativeZoom: 19, // TEST 2 below: change this to find the real limit
+        subdomains: '',
+      }),
     }),
 
     // Geolocation
