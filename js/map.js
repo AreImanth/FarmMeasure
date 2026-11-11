@@ -129,7 +129,7 @@
       if (!cfg.labelsUrl) return base;
       const labels = L.tileLayer(cfg.labelsUrl, {
         maxZoom: cfg.maxZoom || CONFIG.maxZoom,
-        maxNativeZoom: 16, // reference labels thin out at high zoom
+        maxNativeZoom: 19, // reference labels thin out at high zoom
         detectRetina: retinaOn,
         crossOrigin: true,
       });
