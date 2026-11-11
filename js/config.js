@@ -57,7 +57,7 @@
         attribution:
           'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
         maxZoom: 22,
-        maxNativeZoom: 19, // TEST 2 below: change this to find the real limit
+        maxNativeZoom: 20, // TEST 2 below: change this to find the real limit
         subdomains: '',
       }),
     }),
