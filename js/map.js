@@ -118,7 +118,7 @@
     // HD (retina) is a creation-time option: toggling it rebuilds layers (see setDetectRetina).
     let retinaOn = false;
     function makeTileLayer(cfg) {
-      return L.tileLayer(cfg.url, {
+      const base = L.tileLayer(cfg.url, {
         attribution: cfg.attribution,
         maxZoom: cfg.maxZoom || CONFIG.maxZoom,
         maxNativeZoom: cfg.maxNativeZoom || CONFIG.maxZoom,
@@ -126,9 +126,17 @@
         subdomains: cfg.subdomains || 'abc',
         crossOrigin: true,
       });
+      if (!cfg.labelsUrl) return base;
+      const labels = L.tileLayer(cfg.labelsUrl, {
+        maxZoom: cfg.maxZoom || CONFIG.maxZoom,
+        maxNativeZoom: 16, // reference labels thin out at high zoom
+        detectRetina: retinaOn,
+        crossOrigin: true,
+      });
+      return L.layerGroup([base, labels]);
     }
-
     let tileLayer = makeTileLayer(tileCfg).addTo(map);
+
 
     // --- Base layers for the Leaflet layer switcher ---
     // Build a tile layer for every entry in CONFIG.tiles (except `active`).
