@@ -44,8 +44,8 @@
       rotateControl: false, // we add a styled compass below
       shiftKeyRotate: true,
       compassBearing: false,
-      zoomSnap: 0.5,   // allow half zoom levels (use 0.25 for even finer steps)
-      zoomDelta: 0.5,  // +/- buttons and keyboard move by half a level
+      zoomSnap: 0.25,   // allow half zoom levels (use 0.25 for even finer steps)
+      zoomDelta: 0.25,  // +/- buttons and keyboard move by half a level
       wheelPxPerZoomLevel: 120, // mouse wheel: higher number = slower, smoother zoom
     });
 
