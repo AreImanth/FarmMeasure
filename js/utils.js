@@ -80,13 +80,20 @@
     return yyyy + '-' + mm + '-' + dd;
   }
 
-  /** Human-readable timestamp for PDF headers. */
-  function formatTimestamp(d) {
+  /** Human-readable timestamp for PDF headers. `locale` defaults to en-IN. */
+  function formatTimestamp(d, locale) {
     d = d || new Date();
-    return d.toLocaleString('en-IN', {
-      year: 'numeric', month: 'long', day: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
+    try {
+      return d.toLocaleString(locale || 'en-IN', {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+    } catch (_) {
+      return d.toLocaleString('en-IN', {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+    }
   }
 
   /**

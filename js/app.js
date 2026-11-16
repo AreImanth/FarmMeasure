@@ -652,9 +652,11 @@
       const prev = I.getLanguage();
       I.setLanguage(next).then(function () {
         if (ui && ui.toast && next !== prev) {
-          ui.toast(next === 'hi'
-            ? I.t('lang.changedHi', null, 'भाषा हिन्दी में बदली गई।')
-            : I.t('lang.changedEn', null, 'Language changed to English.'), 'success', 2500);
+          const meta = (I.LANGS || []).filter(function (l) { return l.id === next; })[0];
+          ui.toast(
+            I.t('lang.changed', { lang: meta ? meta.native : next }, 'Language changed.'),
+            'success', 2500
+          );
         }
       });
     });

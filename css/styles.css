@@ -63,6 +63,68 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
+/* --- Indic UI fonts ------------------------------------------------------
+   Ships with the app (offline, no CDN). Each face is a static, subset Noto
+   Sans build — rebuilt with scripts/build-fonts.py — so the screen and the
+   PDF use the exact same letterforms. Browsers only download the family for
+   the active <html lang>, and js/pdf.js asks document.fonts for it before
+   shaping a report. */
+@font-face {
+  font-family: "Noto Sans Devanagari";
+  src: url("../fonts/NotoSansDevanagari-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Sans Devanagari";
+  src: url("../fonts/NotoSansDevanagari-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Sans Telugu";
+  src: url("../fonts/NotoSansTelugu-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Sans Telugu";
+  src: url("../fonts/NotoSansTelugu-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Sans Tamil";
+  src: url("../fonts/NotoSansTamil-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Sans Tamil";
+  src: url("../fonts/NotoSansTamil-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+html[lang="hi"] body,
+html[lang="hi"] .leaflet-container {
+  font-family: "Noto Sans Devanagari", var(--font-sans);
+}
+html[lang="te"] body,
+html[lang="te"] .leaflet-container {
+  font-family: "Noto Sans Telugu", var(--font-sans);
+}
+html[lang="ta"] body,
+html[lang="ta"] .leaflet-container {
+  font-family: "Noto Sans Tamil", var(--font-sans);
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --c-bg:          #15171a;

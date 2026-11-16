@@ -41,6 +41,7 @@
   "menu.maptype": "Map type",
   "menu.street": "Street view",
   "menu.hybrid": "MapTiler Hybrid",
+  "menu.esri": "Esri World Imagery (test)",
   "menu.foot": "All draw / zoom / map type tools are here.",
 
   "hint.title": "Drawing mode active.",
@@ -99,7 +100,7 @@
   "dl.singleMsg": "\"{name}\" — download this field only. Other fields will not be included or photographed.",
 
   "help.title": "How to use — FarmMeasure",
-  "help.lang": "🌐 Regional languages: switch between English and हिन्दी from Languages (☰ menu on mobile, 🌐 button on desktop). Reports print in the same language.",
+  "help.lang": "🌐 Regional languages: switch between English, हिन्दी, తెలుగు and தமிழ் from Languages (☰ menu on mobile, 🌐 button on desktop). Reports print in the same language.",
   "help.s1h": "1. Plot your field",
   "help.s1li1": "Tap <strong>⬟ Draw polygon</strong> (top-left) to start.",
   "help.s1li2": "Tap corners of your field on the map. For uneven edges, add more points.",
@@ -147,12 +148,15 @@
   "lang.message": "Choose the display language. Reports print in the same language.",
   "lang.cancel": "Cancel",
   "lang.ok": "Apply",
+  "lang.changed": "Language changed: {lang}.",
   "lang.changedEn": "Language changed to English.",
   "lang.changedHi": "Language changed to Hindi.",
+  "lang.changedTe": "Language changed to Telugu.",
+  "lang.changedTa": "Language changed to Tamil.",
 
   "map.helpTitle": "How to use — plotting, units, state metrics",
   "map.helpAria": "Show usage instructions",
-  "map.langTitle": "App language — English / हिन्दी",
+  "map.langTitle": "App language — English / हिन्दी / తెలుగు / தமிழ்",
   "map.langAria": "Change app language",
 
   "toast.restored": "Restored {n} field(s) from this device.",
@@ -277,6 +281,7 @@
   "pdf.brand": "All measurements computed locally",
   "pdf.mapdata": "Map data © OpenStreetMap contributors",
   "pdf.perimWord": "m perimeter",
+  "pdf.disclaimerShort": "Indicative measurement only — not a legal survey. Verify before financial/legal use.",
 
   "kml.area": "Area: ",
   "kml.field": "Field",

@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "build": "node scripts/inject-key.js",
+    "fonts": "python scripts/build-fonts.py",
     "key:local": "node scripts/key-local.js",
     "lint": "eslint js/ scripts/inject-key.js scripts/key-local.js",
     "serve": "python -m http.server 8765",
@@ -17,6 +18,7 @@
     "test:math": "node scripts/test-math.js",
     "test:i18n": "node scripts/test-i18n.js",
     "test:pdf": "node scripts/smoke-pdf.js",
+    "proof:pdf": "node scripts/make-proof-pdfs.js",
     "test:storage": "node scripts/smoke-storage.js",
     "test:location": "node scripts/smoke-location.js",
     "test:tiles": "node scripts/smoke-map-tiles.js",

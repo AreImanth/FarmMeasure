@@ -38,6 +38,14 @@ const DOWNLOAD_DIR = path.join(__dirname, '..', 'test-downloads');
   await page.waitForSelector('#map.leaflet-container', { timeout: 10000 });
   await new Promise(r => setTimeout(r, 1500));
 
+  // A fresh profile shows the first-visit help modal over the toolbar, which
+  // would swallow the export click. Dismiss it before interacting.
+  await page.evaluate(() => {
+    const help = document.getElementById('helpModal');
+    const close = document.getElementById('helpCloseBtn');
+    if (help && !help.hidden && close) close.click();
+  });
+
   // Add a couple of test polygons
   await page.evaluate(() => {
     const ctx = window.__fac.mapCtx;

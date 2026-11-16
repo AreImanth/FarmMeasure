@@ -1,5 +1,5 @@
 /**
- * i18n.js — tiny internationalisation layer (English + Hindi for now).
+ * i18n.js — tiny internationalisation layer (English, Hindi, Telugu, Tamil).
  *
  * Design (privacy-first, offline-first, no dependencies):
  *  - Dictionaries live in lang/*.json, fetched same-origin at boot.
@@ -25,6 +25,8 @@
   const LANGS = [
     { id: 'en', label: 'English', native: 'English' },
     { id: 'hi', label: 'Hindi', native: 'हिन्दी' },
+    { id: 'te', label: 'Telugu', native: 'తెలుగు' },
+    { id: 'ta', label: 'Tamil', native: 'தமிழ்' },
   ];
 
   const cache = {};      // lang id -> dict object

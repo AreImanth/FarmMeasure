@@ -30,9 +30,9 @@ browser — no server, no account, no data leaves your device.
   PDFs contain only that plot — nothing leaks)
 - **Share** — per-field offline hash links (copy, WhatsApp, or native share)
 - **Import** — drag-and-drop GeoJSON/KML with validation and append/replace
-- **Languages** — English (default) and हिन्दी, switchable from the ☰ menu
-  (mobile) or the 🌐 map button (desktop); reports print in the active
-  language (Devanagari embedded in PDFs)
+- **Languages** — English (default), हिन्दी, తెలుగు, and தமிழ், switchable
+  from the ☰ menu (mobile) or the 🌐 map button (desktop); reports print in
+  the active language using bundled Noto Sans faces
 - **GPS location** — center the map on your current position with one tap
 - **Offline + dark mode** — service-worker app shell with tile cache;
   light/dark/auto theme
@@ -45,7 +45,7 @@ browser — no server, no account, no data leaves your device.
 - [leaflet-geoman](https://www.geoman.io/) — drawing and editing tools
 - [Turf.js](https://turfjs.org/) — accurate geodesic area calculation
 - [jsPDF](https://github.com/parallax/jsPDF) + [html2canvas](https://html2canvas.hertzen.com/) — PDF export
-- [Noto Sans Devanagari](https://fonts.google.com/noto/specimen/Noto+Sans+Devanagari) (OFL) — Hindi PDF text
+- [Noto Sans Devanagari / Telugu / Tamil](https://fonts.google.com/noto) (OFL) — Hindi, Telugu, and Tamil UI + PDF text (static subsets, rebuilt with `npm run fonts`)
 - Vanilla JavaScript — no framework, no build step
 
 ## Running locally
@@ -102,7 +102,7 @@ farmmeasure/
 │   ├── storage.js          # localStorage layer (quota-safe, versioned)
 │   ├── ui.js               # DOM updates
 │   ├── ui-state.js         # State-unit preference persistence
-│   ├── i18n.js             # Language layer (English + Hindi)
+│   ├── i18n.js             # Language layer (English + Hindi + Telugu + Tamil)
 │   ├── pdf.js              # PDF export (per-language fonts)
 │   ├── import.js           # GeoJSON/KML import
 │   ├── share.js            # Per-field hash share links
@@ -113,7 +113,7 @@ farmmeasure/
 │   ├── secrets.example.js  # Template for secrets.js
 │   └── utils.js            # Small helpers
 ├── lang/                   # Translation dictionaries
-├── fonts/                  # Noto Sans Devanagari TTFs for Hindi PDFs (OFL)
+├── fonts/                  # Noto Sans Devanagari/Telugu/Tamil TTFs (OFL)
 ├── scripts/                # Headless smoke tests + Node test suites
 ├── vendor/                 # All JS/CSS libs (no CDN, no SRI needed)
 ├── assets/                 # Static assets
@@ -132,9 +132,13 @@ farmmeasure/
 
 - English is the default and the fallback for any missing string — the UI
   can never render a raw translation key.
-- Hindi (हिन्दी) is fully wired: UI, dialogs, toasts, PDFs, and unit
-  descriptions.
-- Other languages will be adding soon (Telugu, Tamil, Marathi, Malayalam). 
+- Hindi (हिन्दी), Telugu (తెలుగు), and Tamil (தமிழ்) are fully wired: UI,
+  dialogs, toasts, PDF reports, and unit descriptions.
+- Each language ships with its own Noto Sans subset (Regular + Bold). Indic
+  report text is shaped by the browser, rendered to a high-resolution canvas,
+  and embedded in the PDF, so conjuncts and matras stay correct — jsPDF's
+  built-in text engine cannot shape these scripts.
+- Other languages may be added later (Marathi, Malayalam).
 
 ## Privacy
 

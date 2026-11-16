@@ -6,9 +6,10 @@
  *  - {placeholder} substitution (provided vars only; unknown kept intact)
  *  - setLanguage persistence + listener notification + unsupported rejection
  *  - unitLabel() fallback to canonical English label
- *  - Dictionary audit: every en.json key exists in hi.json, and every
- *    {placeholder} in English exists in the Hindi string (a missing {n}
+ *  - Dictionary audit: every en.json key exists in hi/te/ta.json, and every
+ *    {placeholder} in English exists in each translation (a missing {n}
  *    would print a literal "{n}" to a farmer)
+ *  - Vendored Indic fonts exist for every non-English dictionary
  *
  * Run:  node scripts/test-i18n.js      (or: npm run test:i18n)
  * Exits 0 when every test passes, 1 otherwise.
@@ -143,29 +144,61 @@ async function main() {
     await I18N.setLanguage('en');
   });
 
-  await test('i18n: dictionary audit — every en key exists in hi', async () => {
+  await test('i18n: dictionary audit — every en key exists in hi/te/ta', async () => {
     const en = JSON.parse(fs.readFileSync(path.join(ROOT, 'lang/en.json'), 'utf8'));
-    const hi = JSON.parse(fs.readFileSync(path.join(ROOT, 'lang/hi.json'), 'utf8'));
-    const missing = Object.keys(en).filter((k) => k !== '_meta' && typeof hi[k] !== 'string');
-    assert(missing.length === 0, 'hi.json missing keys: ' + missing.join(', '));
+    ['hi', 'te', 'ta'].forEach(function (id) {
+      const dict = JSON.parse(fs.readFileSync(path.join(ROOT, 'lang/' + id + '.json'), 'utf8'));
+      const missing = Object.keys(en).filter((k) => k !== '_meta' && typeof dict[k] !== 'string');
+      assert(missing.length === 0, id + '.json missing keys: ' + missing.join(', '));
+    });
   });
 
   await test('i18n: dictionary audit — {placeholders} match per key', async () => {
     const en = JSON.parse(fs.readFileSync(path.join(ROOT, 'lang/en.json'), 'utf8'));
-    const hi = JSON.parse(fs.readFileSync(path.join(ROOT, 'lang/hi.json'), 'utf8'));
     const bad = [];
-    Object.keys(en).forEach(function (k) {
-      if (k === '_meta' || typeof en[k] !== 'string' || typeof hi[k] !== 'string') return;
-      const a = placeholders(en[k]).join(',');
-      const b = placeholders(hi[k]).join(',');
-      if (a !== b) bad.push(k + ' (en:{' + a + '} hi:{' + b + '})');
+    ['hi', 'te', 'ta'].forEach(function (id) {
+      const dict = JSON.parse(fs.readFileSync(path.join(ROOT, 'lang/' + id + '.json'), 'utf8'));
+      Object.keys(en).forEach(function (k) {
+        if (k === '_meta' || typeof en[k] !== 'string' || typeof dict[k] !== 'string') return;
+        const a = placeholders(en[k]).join(',');
+        const b = placeholders(dict[k]).join(',');
+        if (a !== b) bad.push(id + ':' + k + ' (en:{' + a + '} ' + id + ':{' + b + '})');
+      });
     });
     assert(bad.length === 0, 'placeholder mismatch: ' + bad.join('; '));
   });
 
-  await test('i18n: supported language list is en + hi', async () => {
+  await test('i18n: Telugu dictionary translates UI + report strings', async () => {
+    await I18N.setLanguage('te');
+    assert(I18N.t('panel.title', null, 'X') === 'పొలాలు', 'got: ' + I18N.t('panel.title', null, 'X'));
+    assert(I18N.t('pdf.title', null, 'X') === 'పొలం విస్తీర్ణ నివేదిక');
+    assert(I18N.unitLabel('cent') === 'సెంటు — దక్షిణ (AP/TN/KL/KA)');
+    await I18N.setLanguage('en');
+  });
+
+  await test('i18n: Tamil dictionary translates UI + report strings', async () => {
+    await I18N.setLanguage('ta');
+    assert(I18N.t('panel.title', null, 'X') === 'வயல்கள்', 'got: ' + I18N.t('panel.title', null, 'X'));
+    assert(I18N.t('pdf.title', null, 'X') === 'வயல் பரப்பளவு அறிக்கை');
+    assert(I18N.unitLabel('cent') === 'சென்ட் — தெற்கு (AP/TN/KL/KA)');
+    await I18N.setLanguage('en');
+  });
+
+  await test('i18n: supported language list is en + hi + te + ta', async () => {
     const ids = I18N.LANGS.map(function (l) { return l.id; });
-    assert(ids.length === 2 && ids[0] === 'en' && ids[1] === 'hi', 'got: ' + ids.join(','));
+    assert(ids.join(',') === 'en,hi,te,ta', 'got: ' + ids.join(','));
+  });
+
+  await test('i18n: every non-English dictionary has vendored Regular + Bold fonts', async () => {
+    const ids = I18N.LANGS.map(function (l) { return l.id; }).filter(function (id) { return id !== 'en'; });
+    const faces = { hi: 'NotoSansDevanagari', te: 'NotoSansTelugu', ta: 'NotoSansTamil' };
+    ids.forEach(function (id) {
+      ['Regular', 'Bold'].forEach(function (weight) {
+        const file = path.join(ROOT, 'fonts', faces[id] + '-' + weight + '.ttf');
+        assert(fs.existsSync(file), 'missing font: ' + faces[id] + '-' + weight + '.ttf');
+        assert(fs.statSync(file).size > 20000, 'font suspiciously small: ' + faces[id] + '-' + weight + '.ttf');
+      });
+    });
   });
 
   console.log('\n=== I18N TESTS ===');
