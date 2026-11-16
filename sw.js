@@ -18,7 +18,7 @@
  */
 'use strict';
 
-const STATIC_CACHE = 'fac-static-v3';
+const STATIC_CACHE = 'fac-static-v4';
 const TILES_CACHE = 'fac-tiles-v1';
 const TILES_MAX_ENTRIES = 300;
 
@@ -58,8 +58,14 @@ const PRECACHE_URLS = [
   './js/app.js',
   './lang/en.json',
   './lang/hi.json',
+  './lang/te.json',
+  './lang/ta.json',
   './fonts/NotoSansDevanagari-Regular.ttf',
   './fonts/NotoSansDevanagari-Bold.ttf',
+  './fonts/NotoSansTelugu-Regular.ttf',
+  './fonts/NotoSansTelugu-Bold.ttf',
+  './fonts/NotoSansTamil-Regular.ttf',
+  './fonts/NotoSansTamil-Bold.ttf',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
 ];

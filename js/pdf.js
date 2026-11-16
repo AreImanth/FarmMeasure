@@ -42,56 +42,224 @@
   }
 
   /**
-   * Devanagari font for Hindi PDFs — jsPDF's base fonts are Latin-only and
-   * render Hindi as tofu. Noto Sans Devanagari ships in fonts/ (OFL license)
-   * and is registered once per session, only when Hindi is active.
-   * Returns true when the 'NotoDeva' family is usable, false for fallback.
+   * Indic report text.
+   *
+   * jsPDF's built-in text engine has no OpenType shaping: it draws one glyph
+   * per code point, so Telugu/Tamil/Hindi matras and conjuncts land in the
+   * wrong place (e.g. "విస్తీర్ణం" or "அறிக்கை" come out mangled). The browser
+   * already has a correct shaping engine, so for these languages we render
+   * each text run on a high-DPI canvas and place the PNG into the PDF at the
+   * same coordinates. English (and any future Latin language) still uses the
+   * original vector jsPDF path — output is unchanged.
+   *
+   * The Noto Sans faces are vendored in fonts/ and declared with @font-face
+   * in css/styles.css; the same files drive the UI, so the report looks like
+   * the screen. Fonts load lazily, only for the active language.
    */
-  let devaReady = false;
-  let devaPromise = null;
-  function ensureDevanagari(doc) {
-    if (devaReady) return Promise.resolve(true);
-    if (devaPromise) return devaPromise;
-    devaPromise = (async function () {
-      const files = [
-        ['fonts/NotoSansDevanagari-Regular.ttf', 'NotoDeva-Regular.ttf', 'normal'],
-        ['fonts/NotoSansDevanagari-Bold.ttf', 'NotoDeva-Bold.ttf', 'bold'],
-      ];
-      for (let i = 0; i < files.length; i++) {
-        const res = await fetch(files[i][0]);
-        if (!res.ok) throw new Error('font HTTP ' + res.status);
-        const buf = await res.arrayBuffer();
-        const bytes = new Uint8Array(buf);
-        let bin = '';
-        const CHUNK = 8192;
-        for (let o = 0; o < bytes.length; o += CHUNK) {
-          bin += String.fromCharCode.apply(null, Array.prototype.slice.call(bytes.subarray(o, o + CHUNK)));
-        }
-        doc.addFileToVFS(files[i][1], bin);
-        doc.addFont(files[i][1], 'NotoDeva', files[i][2]);
+  const TEXT_SCALE = 4; // canvas pixels per PDF point (crisp at print size)
+  const INDIC_FONTS = {
+    hi: { family: 'Noto Sans Devanagari', fallback: '"Nirmala UI", "Mangal", sans-serif' },
+    te: { family: 'Noto Sans Telugu', fallback: '"Gautami", "Nirmala UI", sans-serif' },
+    ta: { family: 'Noto Sans Tamil', fallback: '"Latha", "Nirmala UI", sans-serif' },
+  };
+  const LANG_LOCALE = { hi: 'hi-IN', te: 'te-IN', ta: 'ta-IN' };
+
+  function currentLang() {
+    try {
+      const I = global.FAC_I18N;
+      return I && typeof I.getLanguage === 'function' ? I.getLanguage() : 'en';
+    } catch (_) { return 'en'; }
+  }
+
+  let measureCanvas = null;
+  function measureCtx() {
+    if (!measureCanvas) {
+      measureCanvas = document.createElement('canvas');
+      measureCanvas.width = 8;
+      measureCanvas.height = 8;
+    }
+    return measureCanvas.getContext('2d');
+  }
+
+  function toCssColor(a, b, c) {
+    if (typeof a === 'string') {
+      if (a.charAt(0) === '#' && a.length === 4) {
+        return '#' + a[1] + a[1] + a[2] + a[2] + a[3] + a[3];
       }
-      devaReady = true;
-      return true;
-    })().catch(function (e) {
-      // file:// or offline-first-load: Hindi PDF falls back to helvetica.
-      console.warn('[pdf] Devanagari font failed, falling back to helvetica', e);
-      devaPromise = null;
-      return false;
-    });
-    return devaPromise;
+      return a;
+    }
+    if (typeof a === 'number' && b === undefined) {
+      const v = Math.max(0, Math.min(255, Math.round(a)));
+      return 'rgb(' + v + ',' + v + ',' + v + ')';
+    }
+    if (typeof a === 'number' && typeof b === 'number' && typeof c === 'number') {
+      return 'rgb(' + Math.round(a) + ',' + Math.round(b) + ',' + Math.round(c) + ')';
+    }
+    return '#000000';
   }
 
   /**
-   * Resolve the font family for a fresh document: NotoDeva when Hindi is
-   * active (and loadable), helvetica otherwise. English output is unchanged.
+   * Wrap a jsPDF document with canvas-backed text for an Indic language.
+   * Only the text-related API is intercepted; layout, images, lines and
+   * colours keep using jsPDF itself.
+   */
+  function installCanvasText(doc, lang) {
+    const meta = INDIC_FONTS[lang];
+    const state = {
+      size: typeof doc.getFontSize === 'function' ? doc.getFontSize() : 10,
+      weight: 400,
+      italic: false,
+      color: '#000000',
+    };
+    doc.__facText = state;
+
+    const orig = {
+      setFont: doc.setFont.bind(doc),
+      setFontSize: doc.setFontSize.bind(doc),
+      setTextColor: doc.setTextColor.bind(doc),
+    };
+
+    function fontSpec() {
+      return (state.italic ? 'italic ' : '') + state.weight + ' ' +
+        (state.size * TEXT_SCALE) + 'px "' + meta.family + '", ' + meta.fallback;
+    }
+
+    doc.setFont = function (name, style) {
+      const s = String(style || 'normal').toLowerCase();
+      state.weight = s.indexOf('bold') !== -1 ? 700 : 400;
+      state.italic = s.indexOf('italic') !== -1;
+      try { return orig.setFont(name, style); } catch (_) { return doc; }
+    };
+    doc.setFontSize = function (size) {
+      if (Number(size) > 0) state.size = Number(size);
+      return orig.setFontSize(size);
+    };
+    doc.setTextColor = function (a, b, c) {
+      state.color = toCssColor(a, b, c);
+      return orig.setTextColor(a, b, c);
+    };
+    doc.getTextWidth = function (text) {
+      const c = measureCtx();
+      c.font = fontSpec();
+      return c.measureText(String(text == null ? '' : text)).width / TEXT_SCALE;
+    };
+
+    doc.text = function (text, x, y, opts) {
+      const str = Array.isArray(text) ? text.join(' ') : String(text == null ? '' : text);
+      if (!str) return doc;
+      const c = measureCtx();
+      c.font = fontSpec();
+      const metrics = c.measureText(str);
+      const pad = Math.ceil(state.size * TEXT_SCALE * 0.18) + 2;
+      const left = metrics.actualBoundingBoxLeft || 0;
+      const right = metrics.actualBoundingBoxRight || metrics.width;
+      const ascent = metrics.actualBoundingBoxAscent || state.size * TEXT_SCALE * 0.8;
+      const descent = metrics.actualBoundingBoxDescent || state.size * TEXT_SCALE * 0.25;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.ceil(left + right + pad * 2));
+      canvas.height = Math.max(1, Math.ceil(ascent + descent + pad * 2));
+      const ctx = canvas.getContext('2d');
+      ctx.font = fontSpec();
+      ctx.fillStyle = state.color;
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(str, pad + left, pad + ascent);
+
+      const xPt = x - (pad + left) / TEXT_SCALE;
+      const yPt = y - (pad + ascent) / TEXT_SCALE;
+      const align = opts && opts.align;
+      let drawX = xPt;
+      if (align === 'center') drawX -= (metrics.width / TEXT_SCALE) / 2;
+      else if (align === 'right') drawX -= metrics.width / TEXT_SCALE;
+      doc.addImage(
+        canvas.toDataURL('image/png'), 'PNG',
+        drawX, yPt, canvas.width / TEXT_SCALE, canvas.height / TEXT_SCALE,
+        undefined, 'FAST'
+      );
+      return doc;
+    };
+  }
+
+  const webFontPromises = {};
+  function ensureWebFont(lang) {
+    const meta = INDIC_FONTS[lang];
+    if (!meta || typeof document === 'undefined' || !document.fonts) {
+      return Promise.resolve(false);
+    }
+    if (!webFontPromises[lang]) {
+      const fonts = document.fonts;
+      const spec = '16px "' + meta.family + '"';
+      webFontPromises[lang] = Promise.all([
+        fonts.load('400 ' + spec),
+        fonts.load('700 ' + spec),
+      ]).then(function () {
+        return fonts.check('400 ' + spec);
+      }).catch(function () { return false; });
+    }
+    return webFontPromises[lang];
+  }
+
+  /**
+   * Prepare a fresh document for the active language: English keeps the
+   * original Helvetica vector text; Indic languages switch to shaped canvas
+   * text. Returns the family name passed to setFont() (style tracking still
+   * works because setFont/setFontSize are intercepted).
    */
   async function resolvePdfFont(doc) {
-    try {
-      const I = global.FAC_I18N;
-      const lang = I && typeof I.getLanguage === 'function' ? I.getLanguage() : 'en';
-      if (lang === 'hi' && (await ensureDevanagari(doc))) return 'NotoDeva';
-    } catch (_) {}
+    const lang = currentLang();
+    if (INDIC_FONTS[lang]) {
+      installCanvasText(doc, lang);
+      const ready = await ensureWebFont(lang);
+      if (!ready) {
+        console.warn('[pdf] ' + lang + ' font not ready; using the device fallback face');
+      }
+    }
     return 'helvetica';
+  }
+
+  /** Locale-aware timestamp for report headers. */
+  function reportTimestamp() {
+    return UTILS.formatTimestamp(new Date(), LANG_LOCALE[currentLang()] || 'en-IN');
+  }
+
+  /** Split text into lines that fit maxWidth (uses the document's metrics). */
+  function wrapLines(doc, text, maxWidth) {
+    const words = String(text == null ? '' : text).split(/\s+/).filter(Boolean);
+    if (!words.length) return [''];
+    const lines = [];
+    let line = '';
+    words.forEach(function (word) {
+      const next = line ? line + ' ' + word : word;
+      if (line && doc.getTextWidth(next) > maxWidth) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = next;
+      }
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  /** Draw wrapped text, returning the y coordinate after the last line. */
+  function drawWrapped(doc, text, x, y, maxWidth, lineH, opts) {
+    const lines = wrapLines(doc, text, maxWidth);
+    lines.forEach(function (line, i) {
+      doc.text(line, x, y + i * lineH, opts);
+    });
+    return y + lines.length * lineH;
+  }
+
+  /** Shorten a string until it fits maxWidth, adding an ellipsis when cut. */
+  function truncateToWidth(doc, str, maxWidth) {
+    const text = String(str == null ? '' : str);
+    if (!text || doc.getTextWidth(text) <= maxWidth) return text;
+    const ell = '…';
+    let cut = text;
+    while (cut.length > 1 && doc.getTextWidth(cut + ell) > maxWidth) {
+      cut = cut.slice(0, -1);
+    }
+    return cut + ell;
   }
 
   const CAPTURE_DELAY_MS = 600;
@@ -141,12 +309,6 @@
     if (typeof map.setBearing === 'function' && typeof view.bearing === 'number') {
       try { map.setBearing(view.bearing); } catch (_) {}
     }
-  }
-
-  function truncate(str, max) {
-    if (!str) return '';
-    if (str.length <= max) return str;
-    return str.slice(0, max - 1) + '…';
   }
 
   /**
@@ -216,8 +378,7 @@
 
   function addFooter(doc, FONT) {
     // FONT-aware: the brand line is translated, so it must use the same
-    // family as the body (NotoDeva for Hindi, helvetica otherwise).
-    // The legal disclaimer stays English by design and renders in any family.
+    // family as the body (canvas-shaped for Indic, helvetica otherwise).
     const fam = FONT || 'helvetica';
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
@@ -226,21 +387,32 @@
     const brandTail = T('pdf.brand', null, 'All measurements computed locally') +
       ' · ' + T('pdf.mapdata', null, 'Map data © OpenStreetMap contributors');
     const single = brandHead + ' · ' + brandTail;
+    const disclaimer = T('pdf.disclaimerShort', null, CONFIG.report.disclaimerShort);
+    const maxW = pageW - MARGIN * 2;
     for (let i = 1; i <= count; i++) {
       doc.setPage(i);
       doc.setFont(fam, 'normal');
       doc.setFontSize(8);
       doc.setTextColor(130);
-      if (doc.getTextWidth(single) <= pageW - MARGIN * 2) {
-        // Short line (English): original single-line layout, unchanged.
-        doc.text(CONFIG.report.disclaimerShort, pageW / 2, pageH - 32, { align: 'center' });
+      if (doc.getTextWidth(single) <= maxW && doc.getTextWidth(disclaimer) <= maxW) {
+        // Short lines (English): original single-line layout, unchanged.
+        doc.text(disclaimer, pageW / 2, pageH - 32, { align: 'center' });
         doc.text(single, pageW / 2, pageH - 20, { align: 'center' });
       } else {
-        // Long line (Hindi): split across two centered lines so nothing
-        // trims off the page edge.
-        doc.text(CONFIG.report.disclaimerShort, pageW / 2, pageH - 42, { align: 'center' });
-        doc.text(brandHead, pageW / 2, pageH - 30, { align: 'center' });
-        doc.text(brandTail, pageW / 2, pageH - 18, { align: 'center' });
+        // Long lines (Indic): stack wrapped, centered lines from the bottom up
+        // so nothing trims off the page edge.
+        let y = pageH - 18;
+        const brandLines = [brandHead].concat(wrapLines(doc, brandTail, maxW));
+        for (let b = brandLines.length - 1; b >= 0; b--) {
+          doc.text(brandLines[b], pageW / 2, y, { align: 'center' });
+          y -= 11;
+        }
+        y -= 3;
+        const discLines = wrapLines(doc, disclaimer, maxW);
+        for (let d = discLines.length - 1; d >= 0; d--) {
+          doc.text(discLines[d], pageW / 2, y, { align: 'center' });
+          y -= 11;
+        }
       }
     }
   }
@@ -288,7 +460,7 @@
 
       // 2. Build PDF shell
       const doc = new Ctor({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-      // Hindi reports need the embedded Devanagari family (base fonts are Latin-only).
+      // Indic reports switch to canvas-shaped text (jsPDF cannot shape abugidas).
       const FONT = await resolvePdfFont(doc);
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
@@ -301,7 +473,7 @@
       doc.setFont(FONT, 'normal');
       doc.setFontSize(10);
       doc.setTextColor(110);
-      doc.text(T('pdf.generated', null, 'Generated ') + UTILS.formatTimestamp(new Date()), MARGIN, y);
+      doc.text(T('pdf.generated', null, 'Generated ') + reportTimestamp(), MARGIN, y);
       y += 14;
       const repLines = reporterLines(ctx.reporter);
       if (repLines.length) {
@@ -343,8 +515,14 @@
         doc.setFont(FONT, 'normal');
         doc.setFontSize(9);
         doc.setTextColor(80);
-        doc.text(T('pdf.stateUnit', null, 'State unit: ') + unitLabel(activeStateUnit) + '  ·  1 ' + stateMeta.short + ' = ' + UTILS.formatNumber(UNITS.TO_M2[activeStateUnit]) + ' m²  ·  1 acre = ' + UTILS.formatNumber(UNITS.fromSquareMeters(UNITS.TO_M2.ac, activeStateUnit)) + ' ' + stateMeta.short, MARGIN, y);
-        y += 12;
+        y = drawWrapped(
+          doc,
+          T('pdf.stateUnit', null, 'State unit: ') + unitLabel(activeStateUnit) +
+            '  ·  1 ' + stateMeta.short + ' = ' + UTILS.formatNumber(UNITS.TO_M2[activeStateUnit]) +
+            ' m²  ·  1 acre = ' + UTILS.formatNumber(UNITS.fromSquareMeters(UNITS.TO_M2.ac, activeStateUnit)) +
+            ' ' + stateMeta.short,
+          MARGIN, y, pageW - MARGIN * 2, 11
+        ) + 1;
       }
       doc.setFont(FONT, 'bold');
       doc.setFontSize(12);
@@ -388,7 +566,7 @@
         doc.rect(MARGIN + 1, y - 8, 9, 9, 'F');
         doc.setTextColor(20);
         doc.text(String(idx + 1), colX[0], y);
-        doc.text(truncate(meta.name || (T('panel.fieldWord', null, 'Field') + ' ' + (idx + 1)), hasState ? 18 : 26), colX[1], y);
+        doc.text(truncateToWidth(doc, meta.name || (T('panel.fieldWord', null, 'Field') + ' ' + (idx + 1)), colX[2] - colX[1] - 8), colX[1], y);
         doc.text(UTILS.formatNumber(UNITS.fromSquareMeters(areaM2, 'm2')), colX[2], y);
         doc.text(UTILS.formatNumber(UNITS.fromSquareMeters(areaM2, 'ha')), colX[3], y);
         doc.text(UTILS.formatNumber(UNITS.fromSquareMeters(areaM2, 'ac')), colX[4], y);
@@ -426,8 +604,11 @@
         doc.setFont(FONT, 'normal');
         doc.setFontSize(9);
         doc.setTextColor(110);
-        doc.text(T('pdf.photosNote', null, 'Each field photo appears on its own page (privacy: each plot shown individually).'), MARGIN, y);
-        y += 18;
+        y = drawWrapped(
+          doc,
+          T('pdf.photosNote', null, 'Each field photo appears on its own page (privacy: each plot shown individually).'),
+          MARGIN, y, pageW - MARGIN * 2, 11
+        ) + 7;
 
         for (let idx = 0; idx < layers.length; idx++) {
           if (idx > 0) { doc.addPage(); y = MARGIN; }
@@ -457,14 +638,13 @@
           doc.setFillColor(fieldColor);
           doc.rect(MARGIN + 2, y - 9, 10, 10, 'F');
           const title = (idx + 1) + '. ' + (meta.name || (T('panel.fieldWord', null, 'Field') + ' ' + (idx + 1))) + ' — ' + UTILS.formatNumber(UNITS.fromSquareMeters(areaM2, 'ha')) + ' ha / ' + UTILS.formatNumber(UNITS.fromSquareMeters(areaM2, 'ac')) + ' ac';
-          doc.text(truncate(title, 68), MARGIN + 18, y);
+          doc.text(truncateToWidth(doc, title, pageW - MARGIN * 2 - 18), MARGIN + 18, y);
           y += 17;
           doc.setFont(FONT, 'normal');
           doc.setFontSize(10);
           doc.setTextColor(110);
           const detail = UTILS.formatNumber(UNITS.fromSquareMeters(areaM2, 'm2')) + ' m² · ' + UTILS.formatNumber(UNITS.fromSquareMeters(areaM2, 'sqft')) + ' sq ft · ' + UTILS.formatNumber(ctx.drawing.perimeterOf(layer)) + ' ' + T('pdf.perimWord', null, 'm perimeter') + (hasState ? ' · ' + UTILS.formatNumber(UNITS.fromSquareMeters(areaM2, activeStateUnit)) + ' ' + stateMeta.short : '');
-          doc.text(detail, MARGIN + 18, y);
-          y += 13;
+          y = drawWrapped(doc, detail, MARGIN + 18, y, pageW - MARGIN * 2 - 18, 12) + 1;
 
           // Separator line between header and image
           doc.setDrawColor(180);
@@ -552,7 +732,7 @@
       fieldCanvas = await captureMap(mapEl, html2canvasFn);
 
       const doc = new Ctor({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-      // Hindi reports need the embedded Devanagari family (base fonts are Latin-only).
+      // Indic reports switch to canvas-shaped text (jsPDF cannot shape abugidas).
       const FONT = await resolvePdfFont(doc);
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
@@ -560,12 +740,12 @@
 
       doc.setFont(FONT, 'bold');
       doc.setFontSize(18);
-      doc.text(truncate(meta.name || T('panel.fieldWord', null, 'Field'), 40), MARGIN, y);
+      doc.text(truncateToWidth(doc, meta.name || T('panel.fieldWord', null, 'Field'), pageW - MARGIN * 2), MARGIN, y);
       y += 18;
       doc.setFont(FONT, 'normal');
       doc.setFontSize(10);
       doc.setTextColor(110);
-      doc.text(T('pdf.generated', null, 'Generated ') + UTILS.formatTimestamp(new Date()), MARGIN, y);
+      doc.text(T('pdf.generated', null, 'Generated ') + reportTimestamp(), MARGIN, y);
       y += 14;
       const repLinesSingle = reporterLines(ctx.reporter);
       if (repLinesSingle.length) {
@@ -618,12 +798,17 @@
       // Color swatch
       doc.setFillColor(meta.color || '#2d5016');
       doc.rect(MARGIN, y - 8, 10, 10, 'F');
+      let labelW = 0;
+      rows.forEach(function (r) {
+        labelW = Math.max(labelW, doc.getTextWidth(r[0] + ':'));
+      });
+      const valueX = Math.max(MARGIN + 90, MARGIN + 16 + labelW + 12);
       rows.forEach(function (r) {
         doc.setTextColor(60);
         doc.text(r[0] + ':', MARGIN + 16, y);
         doc.setTextColor(20);
         doc.setFont(FONT, 'bold');
-        doc.text(UTILS.formatNumber(r[1]), MARGIN + 90, y);
+        doc.text(UTILS.formatNumber(r[1]), valueX, y);
         doc.setFont(FONT, 'normal');
         y += 14;
       });
@@ -632,7 +817,11 @@
       doc.setFont(FONT, 'normal');
       doc.setFontSize(8);
       doc.setTextColor(130);
-      doc.text(T('pdf.note', null, 'Measurements computed via spherical-excess (Turf.js). Map © OpenStreetMap / MapTiler.'), MARGIN, y);
+      y = drawWrapped(
+        doc,
+        T('pdf.note', null, 'Measurements computed via spherical-excess (Turf.js). Map © OpenStreetMap / MapTiler.'),
+        MARGIN, y, pageW - MARGIN * 2, 10
+      );
 
       addFooter(doc, FONT);
       const safeName = (meta.name || 'field').replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 30) || 'field';
