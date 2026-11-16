@@ -147,6 +147,9 @@
       // 7. GPS button
       wireGpsButton(ui);
 
+      // 7-search. Place search (village / mandal / district)
+      if (global.FAC_SEARCH) global.FAC_SEARCH.init({ map: mapCtx.map });
+
       // 7a. Import GeoJSON / KML
       wireImport(ui, mapCtx, drawing);
 

@@ -27,6 +27,7 @@ module.exports = [
         FAC_MAP: 'readonly',
         FAC_DRAWING: 'readonly',
         FAC_GEOLOCATION: 'readonly',
+        FAC_SEARCH: 'readonly',
         FAC_UI: 'readonly',
         FAC_UI_STATE: 'readonly',
         FAC_PDF: 'readonly',

@@ -18,7 +18,7 @@
  */
 'use strict';
 
-const STATIC_CACHE = 'fac-static-v2';
+const STATIC_CACHE = 'fac-static-v3';
 const TILES_CACHE = 'fac-tiles-v1';
 const TILES_MAX_ENTRIES = 300;
 
@@ -44,6 +44,7 @@ const PRECACHE_URLS = [
   './js/map.js',
   './js/drawing.js',
   './js/geolocation.js',
+  './js/search.js',
   './js/ui.js',
   './js/pdf.js',
   './js/ui-state.js',
