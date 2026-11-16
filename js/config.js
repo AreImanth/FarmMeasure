@@ -96,6 +96,20 @@
       minAreaM2: 0.01, // anything smaller is considered a click, not a field
     }),
 
+    // Place search (villages / mandals / districts). OSM Nominatim: free, no
+    // key, but light-use only (max 1 request/sec, no autocomplete). If traffic
+    // grows, point `endpoint` at a self-hosted Nominatim or a paid geocoder
+    // and update the CSP connect-src in index.html.
+    search: Object.freeze({
+      endpoint: 'https://nominatim.openstreetmap.org/search',
+      countryCodes: 'in',
+      limit: 6,
+      minChars: 3,
+      minIntervalMs: 1100,
+      timeoutMs: 8000,
+      flyMaxZoom: 16, // village-level view; user zooms in to find the field
+    }),
+
     // Report trust & legal — shown in every generated file + help.
     report: Object.freeze({
       disclaimer: 'Indicative measurement from user-drawn boundaries on satellite imagery. Not a legal survey — verify against revenue records or a licensed surveyor before financial or legal use.',

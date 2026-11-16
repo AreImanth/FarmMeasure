@@ -161,7 +161,7 @@ button { font: inherit; color: inherit; }
   background: var(--c-primary);
   color: #fff;
   box-shadow: var(--shadow-sm);
-  z-index: 1000;
+  z-index: 1100; /* above Leaflet controls (1000) so the search dropdown is never covered */
   position: relative;
 }
 .header-inner {
@@ -217,6 +217,97 @@ button { font: inherit; color: inherit; }
   0% { box-shadow: 0 0 0 0 rgba(45,80,22,.45); }
   70% { box-shadow: 0 0 0 6px rgba(45,80,22,0); }
   100% { box-shadow: 0 0 0 0 rgba(45,80,22,0); }
+}
+/* --- Place search (header) ------------------------------------------------ */
+.search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 360px;
+  margin-right: 8px;
+}
+.search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  padding: 0 38px 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.9);
+  background: #fff;
+  color: #1b1f17;
+  font-size: 13px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+.search-input::placeholder { color: #6b7266; }
+.search-input:focus { outline: 2px solid var(--c-accent, #f5b301); outline-offset: 1px; }
+.search-btn {
+  position: absolute;
+  right: 2px; top: 2px;
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%;
+  background: var(--c-primary);
+  color: #fff;
+  cursor: pointer;
+}
+.search-btn:disabled { opacity: .6; cursor: progress; }
+.search-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(420px, 92vw);
+  max-height: min(60vh, 380px);
+  overflow-y: auto;
+  background: var(--c-bg-elev, #fff);
+  color: var(--c-text, #1b1f17);
+  border: 1px solid var(--c-border, #d8dccf);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
+  z-index: 1200;
+  text-align: left;
+}
+.search-panel[hidden] { display: none; }
+.search-status { padding: 10px 12px; font-size: 13px; color: var(--c-text-muted, #555); }
+.search-status.is-warn { color: #9a5b00; }
+.search-status.is-error { color: #b3261e; }
+.search-results { list-style: none; margin: 0; padding: 0; }
+.search-item {
+  display: block; width: 100%;
+  padding: 10px 12px; min-height: 44px;
+  border: 0; border-top: 1px solid var(--c-border, #e3e6dc);
+  background: transparent; color: inherit;
+  text-align: left; cursor: pointer; font: inherit;
+}
+.search-item:hover, .search-item:focus { background: var(--c-primary-lt, #eef4e6); outline: none; }
+.search-item-title { display: block; font-size: 14px; font-weight: 600; }
+.search-item-sub { display: block; font-size: 12px; color: var(--c-text-muted, #666); margin-top: 2px; }
+.search-credit { padding: 6px 12px; font-size: 11px; color: var(--c-text-muted, #777); border-top: 1px solid var(--c-border, #e3e6dc); }
+.search-pin { background: none; border: 0; }
+.search-pin-dot {
+  display: block; width: 18px; height: 18px; margin: 3px;
+  border-radius: 50%;
+  background: #e53935; border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(229,57,53,.45), 0 2px 6px rgba(0,0,0,.4);
+}
+.search-pin-tip { font-weight: 600; font-size: 12px; }
+@media (max-width: 767px) {
+  .search-form { flex: 1 1 0; margin-right: 6px; max-width: none; }
+  .search-input { height: 30px; font-size: 16px; /* >=16px stops iOS focus-zoom */ }
+  .search-btn { width: 26px; height: 26px; }
+  .search-panel {
+    position: fixed;
+    top: var(--header-h); left: 8px; right: 8px;
+    width: auto;
+  }
+}
+@media (max-width: 560px) {
+  /* Make room for the search box: GPS shows just its ◎ icon (aria-label keeps the name). */
+  .btn-gps-header { padding: 0 9px; }
+  .btn-gps-header .btn-label { font-size: 0; }
+  .btn-gps-header .btn-label::before { font-size: 16px; }
+  .btn-gps-header .gps-active-dot { display: none; }
 }
 .brand-icon { font-size: 22px; line-height: 1; }
 .brand-title {
