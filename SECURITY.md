@@ -17,7 +17,7 @@ If you discover a security vulnerability, please report it responsibly:
 ## Secret Management
 
 - The MapTiler API key is injected at build time via environment variables.
-- Never commit real API keys, tokens, or credentials.
+- Never commit real API keys, tokens, or credentials and if committed, restrict the API keys reachability to your own url from the maptiler's api console.
 - The pre-commit hook blocks common secret patterns.
 - Rotate keys immediately if they are ever exposed.
 
