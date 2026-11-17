@@ -1,7 +1,7 @@
 {
   "name": "FarmMeasure",
   "short_name": "FarmMeasure",
-  "description": "Measure agricultural field boundaries and calculate land area — offline, private, no account.",
+  "description": "Measure agricultural field boundaries and calculate land area — offline, private, no account. View all the functionalities in your local language [English, Hindi, Telugu, Tamil] and download the reports in the same languages",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
